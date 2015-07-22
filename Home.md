@@ -11,7 +11,7 @@ If the Stan Math Library has been cloned as part of the Stan library, no configu
 
 If the Stan Math Library is outside of the Stan library, the following variables have to be provided to make in either `make/local` or `~/.config/stan/make.local`:
 
-- `STANAPI_HOME` (the home directory of the Stan library)
+- `STANAPI_HOME` (the home directory of the Stan library, trailing slash is necessary!)
 
 or
 
@@ -22,9 +22,9 @@ or
 
 Example `~/.config/stan/make.local` file:
 ```
-STANAPI_HOME = ~/stan
+STANAPI_HOME = ~/stan/
 ```
-
+**NOTE** must include the trailing slash
 
 If you see this message:
 
