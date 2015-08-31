@@ -1,19 +1,15 @@
 # Running Tests from the math library
 
-Running tests in the Stan Math Library require these libraries:
+Running tests in the Stan Math Library require these libraries, which are all included in the repository:
 
 - Boost
 - Eigen
 - Google Test
 - CppLint (optional)
 
-If the Stan Math Library has been cloned as part of the Stan library, no configuration is necessary.
+No additional configuration is necessary to start running with the default libraries. 
 
-If the Stan Math Library is outside of the Stan library, the following variables have to be provided to make in either `make/local` or `~/.config/stan/make.local`:
-
-- `STANAPI_HOME` (the home directory of the Stan library, trailing slash is necessary!)
-
-or
+If you want to use custom locations for the library locations, set these makefile variables:
 
 - `EIGEN`
 - `BOOST`
@@ -22,9 +18,8 @@ or
 
 Example `~/.config/stan/make.local` file:
 ```
-STANAPI_HOME = ~/stan/
+BOOST = ~/boost
 ```
-**NOTE** must include the trailing slash
 
 If you see this message:
 
