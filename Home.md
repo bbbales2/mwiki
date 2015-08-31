@@ -21,6 +21,21 @@ Example `~/.config/stan/make.local` file:
 BOOST = ~/boost
 ```
 
+# Running tests
+
+To run tests, you will need a copy of the Math library, a C++ compiler, make, and python (for the test script).
+
+To run the unit tests, type:
+```
+> ./runTests.py test/unit
+```
+
+To run the auto-generated distribution tests, type:
+```
+> ./runTests.py test/prob
+```
+
+
 If you see this message:
 
 ```
