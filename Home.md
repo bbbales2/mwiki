@@ -50,3 +50,20 @@ make generate-tests -s failed
 ```
 
 the library paths have not been configured correctly.
+
+# Order Dependencies for Eigen Traits
+
+We need to make sure that for the Eigen traits and the `std::numeric_limits` traits, that we don't try to specialize a template after instantiating the template.  By then it's too late.  See:
+
+http://stackoverflow.com/questions/12732042/explicit-specialization-of-stditerator-traitschar-after-instantiation-c
+
+In practice, this means for stan math that 
+
+* if you are using reverse-mode autodiff, you need to include `stan/math/rev/mat/fun/Eigen_NumTraits.hpp` before including anything from the Eigen namespace (e.g., can't include anything from `prim/mat/*` before `rev/*` if you are going to include `rev/mat/*`), and
+
+* if you are using forward-mode autodiff, you need to include `stan/math/rev/mat/fwd/Eigen_NumTraits.hpp`.
+
+
+
+
+
