@@ -1,4 +1,4 @@
-# Running Tests from the math library
+# Running tests from the math library
 
 Running tests in the Stan Math Library require these libraries, which are all included in the repository:
 
