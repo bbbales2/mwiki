@@ -1,3 +1,8 @@
+# Where do I create a new issue
+
+Stan's development is across multiple repositories. See this page for details on where to put new issues:
+https://github.com/stan-dev/stan/wiki/Where-do-I-create-a-new-issue
+
 # Running tests from the math library
 
 Running tests in the Stan Math Library require these libraries, which are all included in the repository:
