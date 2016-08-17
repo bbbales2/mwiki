@@ -6,12 +6,12 @@ Stan's linear algebra functions assume dense matrices with no special structure.
 
 The current roadmap is as follows:
 
-1 Implement symmetric, positive definite Toeplitz type (can be banded SPD Toeplitz)
-2 Specialize addition, matrix multiplication for SPD Toeplitz type
-3 Specialize Cholesky and inverse for SPD Toeplitz type
-4 Specialize log determinant for SPD Toeplitz
-5 Specialize cov_exp_quad to return SPD Toeplitz
-6 Add Kronecker and Hadamard products for arbitrary matrices
+* Implement symmetric, positive definite Toeplitz type (can be banded SPD Toeplitz)
+* Specialize addition, matrix multiplication for SPD Toeplitz type
+* Specialize Cholesky and inverse for SPD Toeplitz type
+* Specialize log determinant for SPD Toeplitz
+5. Specialize cov_exp_quad to return SPD Toeplitz
+6. Add Kronecker and Hadamard products for arbitrary matrices
 7 Implement SPD type
 8 Specialize cov_exp_quad to return SPD
 9 Specialize Eigendecomposition for SPD matrices
