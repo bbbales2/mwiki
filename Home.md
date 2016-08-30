@@ -1,3 +1,32 @@
+# Using the Stan Math Library
+
+If you're using the Stan Math Library, you should only include one header file. The most common one to include is `stan/math.hpp`.
+
+To choose the correct include, you'll need to know two things:
+- primitive (no auto-diff) vs reverse-mode autodiff vs forward-mode autodiff vs mixed autodiff (includes both reverse and forward-mode)
+- scalar (no `std::vector` or `Eigen::Matrix`) vs array (`std::vector`, but no `Eigen::Matrix`) vs matrix (includes array)
+
+Once you picked what you want to use, you'll include:
+- `stan/math/prim/scal.hpp` for primitive and scalar
+- `stan/math/prim/arr.hpp` for primitive and array
+- `stan/math/prim/mat.hpp` for primitive and matrix
+- `stan/math/rev/scal.hpp` for reverse-mode and scalar
+- `stan/math/rev/arr.hpp` for reverse-mode and array
+- `stan/math/rev/mat.hpp` for reverse-mode and matrix. This is what's included when you include `stan/math.hpp`
+- `stan/math/fwd/scal.hpp` for forward-mode and scalar
+- `stan/math/fwd/arr.hpp` for forward-mode and array
+- `stan/math/fwd/mat.hpp` for forward-mode and matrix
+- `stan/math/mix/scal.hpp` for mixed-mode and scalar
+- `stan/math/mix/arr.hpp` for mixed-mode and array
+- `stan/math/mix/mat.hpp` for mixed-mode and matrix.
+
+## Order Dependencies for Eigen Traits
+
+The reason we provide these files is because we need to make sure that we instantiate traits in the correct order for the Eigen traits and the `std::numeric_limits` traits. If we try to specialize a template after instantiating the template, then it's too late and it won't compile or we'll have other issues.  See this discussion for more details:
+
+http://stackoverflow.com/questions/12732042/explicit-specialization-of-stditerator-traitschar-after-instantiation-c
+
+
 # Where do I create a new issue
 
 Stan's development is across multiple repositories. See this page for details on where to put new issues:
@@ -55,20 +84,4 @@ make generate-tests -s failed
 ```
 
 the library paths have not been configured correctly.
-
-# Order Dependencies for Eigen Traits
-
-We need to make sure that for the Eigen traits and the `std::numeric_limits` traits, that we don't try to specialize a template after instantiating the template.  By then it's too late.  See:
-
-http://stackoverflow.com/questions/12732042/explicit-specialization-of-stditerator-traitschar-after-instantiation-c
-
-In practice, this means for stan math that 
-
-* if you are using reverse-mode autodiff, you need to include `stan/math/rev/mat/fun/Eigen_NumTraits.hpp` before including anything from the Eigen namespace (e.g., can't include anything from `prim/mat/*` before `rev/*` if you are going to include `rev/mat/*`), and
-
-* if you are using forward-mode autodiff, you need to include `stan/math/rev/mat/fwd/Eigen_NumTraits.hpp`.
-
-
-
-
 
