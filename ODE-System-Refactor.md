@@ -10,11 +10,13 @@ Our goal is to refactor the system so we can move forward more quickly.
 
 Daniel Lee. (Soon, we'll have other contributors, but this is starting out with me.) Misrepresentations are all mine.
 
+Sebastian. Additions on my first read.
+
 # Goals
 
 - Refactor the current ODE system; the `integrate_ode_*()` functions will have the same interface.
 - Design the ODE system so it's understandable by other programmers.
-- Design the ODE system os different (templated) classes have different functions.
+- Design the ODE system so different (templated) classes have different functions.
 - Keep the design simple.
 
 # Nongoals
@@ -74,8 +76,9 @@ The Boost ode solver accepts one system equation. The way we deal with this is t
 
 This is implemented in the Stan math library as `integrate_ode_bdf()`.
 
-The CVODES solver requires the ode_rhs as one thing and Jtheta as a second thing.
+The CVODES solver requires the ode_rhs as one thing. The sensitivity RHS is needed separately such that Jy and Jtheta is needed as a second thing.
 
+For the stiff solver of CVODES we also need Jy in any case. That is, for stiff integration Jy is needed even if no sensitivity calculations are done.
 
 ## Design
 
@@ -106,8 +109,9 @@ By separating it out this way (Jy, Jtheta), a user may be able to provide analyt
 
 # Open Issues
 
-How do we implement this? Someone needs to spec these out further with tests.
+- How do we implement this? Someone needs to spec these out further with tests.
 
+- Where do we stick the decoupling operation? Currently we have this being part of coupled_ode_system AND we have the function decouple_ode_states. As the *_ode_system concentrate on creating the right RHS to pass into the integrators, I think we should stick with the newer function decouple_ode_states, right? 
 
 # Side notes
 
