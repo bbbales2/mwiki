@@ -310,7 +310,7 @@ jacobian_ode(const ode_rhs<F>&,
              const vector<double>& y_d,
              const vector<var>& theta_v,
              vector<double>::iterator ydot,
-             vector<double>::iterator Jy) {
+             vector<double>::iterator Jtheta) {
   // use AD to calculate Jtheta
 }
 
