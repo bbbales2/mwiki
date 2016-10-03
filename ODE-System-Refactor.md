@@ -10,7 +10,9 @@ Our goal is to refactor the system so we can move forward more quickly.
 
 Daniel Lee. (Soon, we'll have other contributors, but this is starting out with me.) Misrepresentations are all mine.
 
-Sebastian. Additions on my first read.
+Sebastian.
+- Commented on Daniel
+- Added conceptual DRAFT code (with a few deviations, main on described below)
 
 # Goals
 
@@ -124,6 +126,206 @@ I'm following this
 http://www.joelonsoftware.com/articles/fog0000000035.html
 
 Below this is the original doc written up by Sebastian.
+
+# Dummy code
+
+- usage of iterators of vectors to allow functions to "stream" their output into arbitrary locations in memory. In fact, actual implementations can assume a chunk of memory being allocated (and of the correct size as sensible by the context).
+- I am now using a jacobian_ode function and Jy / Jtheta are different overloads. This felt more natural to write down than the class approach and looks elegant to me.
+
+```c++
+
+
+template <typename F, typename T_initial, typename T_param>
+std::vector<std::vector<typename stan::return_type<T_initial,
+                                                   T_param>::type> >
+integrate_ode_algo(const F& f,
+                   const std::vector<T_initial>& y0,
+                   const double t0,
+                   const std::vector<double>& ts,
+                   const std::vector<T_param>& theta,
+                   const std::vector<double>& x,
+                   const std::vector<int>& x_int,
+                   std::ostream* msgs = 0,
+                   double relative_tolerance = 1e-10,
+                   double absolute_tolerance = 1e-10,
+                   long int max_num_steps = 1e8) {  // NOLINT(runtime/int)
+
+  // make Stan system ready to provide needed stuff for integrator
+
+  algo_ode_system<T_initial, T_param> ode_system(f, y0, theta, x, x_int, msgs);
+  
+  // setup integrator
+
+  // somewhere ode_system is used which exposes the ode RHS and the
+  // ode_sensitivity RHS separatley or as coupled system
+
+  // solution states
+  vector<vector<double> > y_coupled(T, vector<double>(N * (1+S))); 
+
+  // do integration
+
+  algo_ode_system.decouple_states(y_coupled);
+}
+
+
+template <typename F, typename T_initial, typename T_param>
+struct algo_ode_system : public ode_rhs_sensitivity<F, T_initial, T_param> {
+
+  // algo specifc + init ode_rhs_sensitivity base
+  
+};
+
+// example ode system for boost's odeint
+template <typename F, typename T_initial, typename T_param>
+struct odeint_ode_system : public ode_rhs_sensitivity<F, T_initial, T_param> {
+
+  const size_t N_; // number of states
+
+  /**
+   * operator has the expected structure from odeint
+   *
+   * Assign the derivative vector with the system derivatives at
+   * the specified state and time.
+   *
+   * <p>The input state must be of size <code>size()</code>, and
+   * the output produced will be of the same size.
+   *
+   * @param[in] z state of the coupled ode system.
+   * @param[out] dz_dt populated with the derivatives of
+   * the coupled system at the specified state and time.
+   * @param[in]  t time.
+   *
+   * y is the base ODE system state
+   *
+   */
+  void operator()(const std::vector<double>& z,
+                  std::vector<double>& dz_dt,
+                  double t) const {
+    // feed call into rhs sensitivity base class
+    (*this)(t, z.cbegin(), z.cbegin() + N_, dz_dt.begin(), dz_dt.begin() + N_);
+  }
+};
+
+// this class would need to be defined for the four cases
+// d=double, v=var; first position is initial, second type of param;
+// d,d = does essentially nothing as sensitivity system is empty
+// v,d 
+// d,v
+// v,v
+template <typename F, typename T_initial, typename T_param>
+struct ode_rhs_sensitivity {
+
+  // ode RHS
+  const ode_rhs<F> rhs_;
+
+  // initial state of the sensitivity system
+  const vector<double> yS0_d_;
+
+  const vector<T_param> theta_;
+  
+  // number of sensitivites
+  const size_t S;
+  // P=#of param, N=# of states
+  // S=0 d,d
+  // S=N v,d
+  // S=P d,v
+  // S=N+P v,v
+
+  /**
+   * Calculates the RHS of the sensitivity system.
+   *
+   * @param[in] t time
+   * @param[in] y state at t
+   * @param[in] yS state of sensitivity system at t (column major)
+   * @param[out] ydot dy/dt (column major)
+   * @param[out] ySdot dyS/dt (column major)
+   */
+  void operator()(double t,
+                  vector<double>::const_iterator y,
+                  vector<double>::const_iterator yS,
+                  vector<double>::iterator ydot,
+                  vector<double>::iterator ySdot
+                  ) const {
+    // use Jy
+    vector<double> Jy(N_ * N_);
+    const vector<var> y_v(y, y + N_);
+    jacobian_ode(rhs_, y_v, theta_d_, ydot, Jy.begin());
+
+    // and Jtheta 
+    vector<double> Jtheta(N_ * S_);
+    jacobian_ode(rhs_, y, theta_, ydot, Jtheta.begin());
+
+    // use Eigen map facilities for expressive code or just hack it in
+    // using for loops. Solution is streamed to ySdot.
+  }
+
+  // gets the solution vector, T x (N * (1+S))
+  vector<vector<var or double> > decouple_states(vector<vector<double> >& states) const {}
+
+  void initial_state(vector<double>::iterator yS0) const {
+    // copy yS0_d to yS0
+  };
+
+  size_t size() const {
+    return S;
+  }
+};
+
+
+template<typename F>
+struct ode_rhs {
+  const vector<double> theta_d_;
+  const F& f_;
+
+  void operator()(double t, const vector<double>& y, vector<double>::iterator ydot) {
+    // calls ODE RHS functor f_ with theta_d_ and copies results to ydot
+  }
+
+  // templated version to be used for AD
+  template <typename T_state, typename T_param>
+  std::vector<typename stan::return_type<T_state,
+                                         T_param>::type>
+  operator()(double t, const vector<T_state>& y, const vector<T_param>& theta) {
+    // calls ODE RHS functor f_ with y and theta
+  }
+};
+
+// THE jacobian_ode functions CAN BE SPECIALIZED TO BE ANALYTIC
+// IMPLEMENTATIONS
+template<typename F>
+void
+jacobian_ode(const ode_rhs<F> rhs&,
+             const vector<var>& y_v,
+             const vector<double>& theta_d,
+             vector<double>::iterator ydot,
+             vector<double>::iterator Jy) {
+  // use AD to calculate Jy and stream out to Jy. Will write NxN
+  // elements (N=length of y_v vector)
+}
+
+
+template<typename F>
+void
+jacobian_ode(const ode_rhs<F>&,
+             const vector<double>& y_d,
+             const vector<var>& theta_v,
+             vector<double>::iterator ydot,
+             vector<double>::iterator Jy) {
+  // use AD to calculate Jtheta
+}
+
+// optional (which we should add if calculating things in a single
+// sweep is much faster):
+template<typename F>
+void
+jacobian_ode(const ode_rhs<F>&,
+             const vector<var>& y_v,
+             const vector<var>& theta_v,
+             vector<double>::iterator ydot,
+             vector<double>::iterator J) {
+  // use AD to calculate Jy and Jtheta, stream to J
+}
+```
 
 -----------------------------------------------------
 
