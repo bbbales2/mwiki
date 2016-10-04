@@ -130,11 +130,20 @@ Below this is the original doc written up by Sebastian.
 # Dummy code
 
 - usage of iterators of vectors to allow functions to "stream" their output into arbitrary locations in memory. In fact, actual implementations can assume a chunk of memory being allocated (and of the correct size as sensible by the context).
-- I am now using a jacobian_ode function and Jy / Jtheta are different overloads. This felt more natural to write down than the class approach and looks elegant to me.
+
+- I am now using a jacobian_ode function and Jy / Jtheta are different overloads. This felt more natural to write down than the class approach and looks elegant to me. So specifically the natural types determine what is being done here:
+   - `Jy => jacobian_ode(const ode_rhs&, const vector<var>& y, const vector<double>& theta, vector<double>::iterator Jy)`
+   - `Jtheta => jacobian_ode(const ode_rhs&, const vector<double>& y, const vector<var>& theta, vector<double>::iterator Jtheta)`
+
+- I also introduce ode_rhs_sensitivity which does create the RHS of the sensitivities' states ODE.
+
+- As a convention I use y for states and yS for sensitivity states. Hence, we have ydot and ySdot which is the result of the RHS functions of each. So ydot = f(t,y,theta) and ySdot = fS(t,y,yS,theta). The f is represented by the ode_rhs, the fS by the ode_rhs_sensitivity.
+
+- I changed boost_ode_system to odeint_ode_system since the library we are using is odeint which is part of boost (otherwise we would have to say sundials_ode_system to make it consistent instead of cvodes_ode_system).
 
 ```c++
 
-
+// algo is generic for bdf or rk45
 template <typename F, typename T_initial, typename T_param>
 std::vector<std::vector<typename stan::return_type<T_initial,
                                                    T_param>::type> >
@@ -162,7 +171,7 @@ integrate_ode_algo(const F& f,
   // solution states
   vector<vector<double> > y_coupled(T, vector<double>(N * (1+S))); 
 
-  // do integration
+  // do integration by looping over time points or letting the library do that, solution vector must endup in y_coupled
 
   algo_ode_system.decouple_states(y_coupled);
 }
@@ -202,11 +211,15 @@ struct odeint_ode_system : public ode_rhs_sensitivity<F, T_initial, T_param> {
                   std::vector<double>& dz_dt,
                   double t) const {
     // feed call into rhs sensitivity base class
-    (*this)(t, z.cbegin(), z.cbegin() + N_, dz_dt.begin(), dz_dt.begin() + N_);
+    (*this)(t,
+            z.cbegin(),  // pointer to the states y which are the first N entries
+            z.cbegin() + N_, // points to the sensitivity states yS which are right after the N states
+            dz_dt.begin(),  // the ydot goes into the front
+            dz_dt.begin() + N_); // the ySdot follows this
   }
 };
 
-// this class would need to be defined for the four cases
+// this class represent fS and would need to be defined for the four cases
 // d=double, v=var; first position is initial, second type of param;
 // d,d = does essentially nothing as sensitivity system is empty
 // v,d 
@@ -291,7 +304,7 @@ struct ode_rhs {
 };
 
 // THE jacobian_ode functions CAN BE SPECIALIZED TO BE ANALYTIC
-// IMPLEMENTATIONS
+// IMPLEMENTATIONS, this here corresponds to Jy
 template<typename F>
 void
 jacobian_ode(const ode_rhs<F> rhs&,
@@ -303,7 +316,7 @@ jacobian_ode(const ode_rhs<F> rhs&,
   // elements (N=length of y_v vector)
 }
 
-
+// this one corresponds to Jtheta
 template<typename F>
 void
 jacobian_ode(const ode_rhs<F>&,
@@ -315,7 +328,7 @@ jacobian_ode(const ode_rhs<F>&,
 }
 
 // optional (which we should add if calculating things in a single
-// sweep is much faster):
+// sweep is faster):
 template<typename F>
 void
 jacobian_ode(const ode_rhs<F>&,
