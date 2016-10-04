@@ -135,9 +135,11 @@ Below this is the original doc written up by Sebastian.
    - `Jy => jacobian_ode(const ode_rhs&, const vector<var>& y, const vector<double>& theta, vector<double>::iterator Jy)`
    - `Jtheta => jacobian_ode(const ode_rhs&, const vector<double>& y, const vector<var>& theta, vector<double>::iterator Jtheta)`
 
-- I also introduce ode_rhs_sensitivity which does create the RHS of the sensitivities' states ODE.
+- I also introduce ode_rhs_sensitivity which does create the RHS of the sensitivities' states ODE
 
 - As a convention I use y for states and yS for sensitivity states. Hence, we have ydot and ySdot which is the result of the RHS functions of each. So ydot = f(t,y,theta) and ySdot = fS(t,y,yS,theta). The f is represented by the ode_rhs, the fS by the ode_rhs_sensitivity.
+
+- The ode_rhs_sensitivity object also holds the decouple_states operation and provides the initial_state of the sensitivity system.
 
 - I changed boost_ode_system to odeint_ode_system since the library we are using is odeint which is part of boost (otherwise we would have to say sundials_ode_system to make it consistent instead of cvodes_ode_system).
 
