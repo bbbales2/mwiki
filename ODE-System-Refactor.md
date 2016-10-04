@@ -322,8 +322,9 @@ jacobian_ode(const ode_rhs<F>&,
              const vector<var>& y_v,
              const vector<var>& theta_v,
              vector<double>::iterator ydot,
-             vector<double>::iterator J) {
-  // use AD to calculate Jy and Jtheta, stream to J
+             vector<double>::iterator Jy,
+             vector<double>::iterator Jtheta) {
+  // use AD to calculate Jy and Jtheta, stream to Jy / Jtheta
 }
 ```
 
