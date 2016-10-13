@@ -69,6 +69,10 @@ To run the auto-generated distribution tests, type:
 > ./runTests.py test/prob
 ```
 
+To run the multiple translation unit tests, type:
+```
+> ./runTests.py test/unit/multiple_translation_units_test.cpp
+```
 
 If you see this message:
 
@@ -84,4 +88,9 @@ make generate-tests -s failed
 ```
 
 the library paths have not been configured correctly.
+
+To test headers,
+```
+> make test-headers
+```
 
