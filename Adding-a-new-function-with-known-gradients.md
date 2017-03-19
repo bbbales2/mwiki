@@ -23,6 +23,8 @@ namespace stan {
 }
 ```
 
+This will even work for higher-order autodiff if you include the top-level header `<stan/math.hpp>`.
+
 #### Simple univariate example with known derivatives
 
 Suppose have a code to calculate a univariate function and its derivative:
