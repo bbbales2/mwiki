@@ -145,8 +145,22 @@ namespace stan {
       return bar::foo(x);
     }
     Eigen::Matrix<var, -1, 1> foo(const Eigen::Vector<var, -1, 1>& x) {
+      Eigen::VectorXd a = value_of(x);
       Eigen::MatrixXd J = foo_jacobian(a);
+      Eigen::Matrix<var, -1, 1> result(a.rows());
+      std::vector<double> grads(x.rows());
+      for (int i = 0; i < a.rows(); ++i) {
+        for (int j = 0; j < a.rows(); ++j)
+          grads(j) = J(i, j);
+        result(i) = precomputed_gradients(a(i), x, grads);
+      }
+      return result;
     }
+  }
+}
+```
+
+We cold obviously use a form of `precomputed_gradients` that takes in an entire Jacobian to remove the error-prone and non-memory-local loops (by default, matrices are stored column-major in Eigen).
    
 
   
