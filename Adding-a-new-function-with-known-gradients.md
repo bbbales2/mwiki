@@ -1,5 +1,28 @@
 If you have a function f and you know the gradients for it, it is straightforward to add the function to Stan's math library.
 
+
+#### Templated function
+
+If your function is templated separately on all of its arguments and bottoms out only in functions built into the C++ standard library or into Stan, there's nothing to do other than add it to the Stan namespace.  For example, if we want to code in a simple z-score calculation, we can do it very easily as follows, because the `mean` and `sd` function are built into Stan's math library:
+
+
+```
+#include <stan/math/rev.hpp>
+
+namespace stan {
+  namespace math {
+    vector<T> z(const vector<T>& x) {
+      T mean = mean(x);
+      T sd = sd(x);
+      vector<T> result;
+      for (size_t i = 0; i < x.size(); ++i)
+        result[i] = (x[i] - mean) / sd;
+      return result;
+    }
+  }
+}
+```
+
 #### Simple univariate example with known derivatives
 
 Suppose have a code to calculate a univariate function and its derivative:
